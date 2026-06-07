@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 function TradeJournal() {
   const [coin, setCoin] = useState("");
@@ -6,40 +7,49 @@ function TradeJournal() {
   const [exit, setExit] = useState("");
   const [trades, setTrades] = useState([]);
 
-  useEffect(() => {
-    const savedTrades = localStorage.getItem("trades");
+  const fetchTrades = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/trades"
+      );
 
-    if (savedTrades) {
-      setTrades(JSON.parse(savedTrades));
+      setTrades(res.data);
+    } catch (error) {
+      console.error(error);
     }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("trades", JSON.stringify(trades));
-  }, [trades]);
-
-  const addTrade = () => {
-    if (!coin || !entry || !exit) return;
-
-    const pnl = Number(exit) - Number(entry);
-
-    const newTrade = {
-      id: Date.now(),
-      coin,
-      entry,
-      exit,
-      pnl,
-    };
-
-    setTrades([...trades, newTrade]);
-
-    setCoin("");
-    setEntry("");
-    setExit("");
   };
 
-  const deleteTrade = (id) => {
-    setTrades(trades.filter((trade) => trade.id !== id));
+  useEffect(() => {
+    fetchTrades();
+  }, []);
+
+  const addTrade = async () => {
+    if (!coin || !entry || !exit) return;
+
+    try {
+      const pnl = Number(exit) - Number(entry);
+
+      await axios.post(
+        "http://localhost:5000/api/trades",
+        {
+          symbol: coin,
+          entryPrice: Number(entry),
+          exitPrice: Number(exit),
+          quantity: 1,
+          profitLoss: pnl,
+          tradeType: pnl >= 0 ? "Long" : "Short",
+        }
+      );
+
+      fetchTrades();
+
+      setCoin("");
+      setEntry("");
+      setExit("");
+
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -84,39 +94,32 @@ function TradeJournal() {
       <div className="mt-6">
         {trades.map((trade) => (
           <div
-            key={trade.id}
+            key={trade._id}
             className="bg-slate-800 p-4 rounded-xl mb-3 flex justify-between"
           >
             <div>
               <h3 className="font-bold text-lg">
-                {trade.coin}
+                {trade.symbol}
               </h3>
 
               <p>
-                Entry: ${trade.entry}
+                Entry: ${trade.entryPrice}
               </p>
 
               <p>
-                Exit: ${trade.exit}
+                Exit: ${trade.exitPrice}
               </p>
 
               <p
                 className={
-                  trade.pnl >= 0
+                  trade.profitLoss >= 0
                     ? "text-green-400"
                     : "text-red-400"
                 }
               >
-                P&L: ${trade.pnl}
+                P&L: ${trade.profitLoss}
               </p>
             </div>
-
-            <button
-              onClick={() => deleteTrade(trade.id)}
-              className="bg-red-600 px-3 py-1 rounded"
-            >
-              Delete
-            </button>
           </div>
         ))}
       </div>
