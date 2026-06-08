@@ -2,7 +2,10 @@ const Trade = require("../models/Trade");
 
 const createTrade = async (req, res) => {
   try {
-    const trade = await Trade.create(req.body);
+    const trade = await Trade.create({
+      ...req.body,
+      user: req.user.id,
+    });
 
     res.status(201).json({
       message: "Trade Saved Successfully",
@@ -17,7 +20,9 @@ const createTrade = async (req, res) => {
 
 const getTrades = async (req, res) => {
   try {
-    const trades = await Trade.find();
+    const trades = await Trade.find({
+      user: req.user.id,
+    });
 
     res.json(trades);
   } catch (error) {
@@ -29,7 +34,9 @@ const getTrades = async (req, res) => {
 
 const getDashboardStats = async (req, res) => {
   try {
-    const trades = await Trade.find();
+    const trades = await Trade.find({
+      user: req.user.id,
+    });
 
     const totalTrades = trades.length;
 
@@ -58,7 +65,6 @@ const getDashboardStats = async (req, res) => {
       winRate,
       netPnL,
     });
-
   } catch (error) {
     res.status(500).json({
       message: error.message,

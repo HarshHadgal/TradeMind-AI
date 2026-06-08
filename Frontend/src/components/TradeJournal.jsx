@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 
 function TradeJournal() {
   const [coin, setCoin] = useState("");
@@ -9,9 +9,7 @@ function TradeJournal() {
 
   const fetchTrades = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:5000/api/trades"
-      );
+      const res = await api.get("/trades");
 
       setTrades(res.data);
     } catch (error) {
@@ -29,24 +27,20 @@ function TradeJournal() {
     try {
       const pnl = Number(exit) - Number(entry);
 
-      await axios.post(
-        "http://localhost:5000/api/trades",
-        {
-          symbol: coin,
-          entryPrice: Number(entry),
-          exitPrice: Number(exit),
-          quantity: 1,
-          profitLoss: pnl,
-          tradeType: pnl >= 0 ? "Long" : "Short",
-        }
-      );
+      await api.post("/trades", {
+        symbol: coin,
+        entryPrice: Number(entry),
+        exitPrice: Number(exit),
+        quantity: 1,
+        profitLoss: pnl,
+        tradeType: pnl >= 0 ? "Long" : "Short",
+      });
 
       fetchTrades();
 
       setCoin("");
       setEntry("");
       setExit("");
-
     } catch (error) {
       console.error(error);
     }
