@@ -10,7 +10,6 @@ function TradeJournal() {
   const fetchTrades = async () => {
     try {
       const res = await api.get("/trades");
-
       setTrades(res.data);
     } catch (error) {
       console.error(error);
@@ -41,6 +40,16 @@ function TradeJournal() {
       setCoin("");
       setEntry("");
       setExit("");
+
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const deleteTrade = async (id) => {
+    try {
+      await api.delete(`/trades/${id}`);
+      fetchTrades();
     } catch (error) {
       console.error(error);
     }
@@ -79,43 +88,66 @@ function TradeJournal() {
 
         <button
           onClick={addTrade}
-          className="bg-blue-600 px-5 py-2 rounded-lg"
+          className="bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700"
         >
           Add Trade
         </button>
       </div>
 
-      <div className="mt-6">
-        {trades.map((trade) => (
-          <div
-            key={trade._id}
-            className="bg-slate-800 p-4 rounded-xl mb-3 flex justify-between"
-          >
-            <div>
-              <h3 className="font-bold text-lg">
-                {trade.symbol}
-              </h3>
+      <div className="mt-6 overflow-x-auto">
+        <table className="w-full bg-slate-800 rounded-xl overflow-hidden">
+          <thead>
+            <tr className="bg-slate-700">
+              <th className="p-3 text-left">Coin</th>
+              <th className="p-3 text-left">Entry</th>
+              <th className="p-3 text-left">Exit</th>
+              <th className="p-3 text-left">P&L</th>
+              <th className="p-3 text-left">Action</th>
+            </tr>
+          </thead>
 
-              <p>
-                Entry: ${trade.entryPrice}
-              </p>
-
-              <p>
-                Exit: ${trade.exitPrice}
-              </p>
-
-              <p
-                className={
-                  trade.profitLoss >= 0
-                    ? "text-green-400"
-                    : "text-red-400"
-                }
+          <tbody>
+            {trades.map((trade) => (
+              <tr
+                key={trade._id}
+                className="border-b border-slate-700"
               >
-                P&L: ${trade.profitLoss}
-              </p>
-            </div>
-          </div>
-        ))}
+                <td className="p-3 font-bold">
+                  {trade.symbol}
+                </td>
+
+                <td className="p-3">
+                  ${trade.entryPrice}
+                </td>
+
+                <td className="p-3">
+                  ${trade.exitPrice}
+                </td>
+
+                <td
+                  className={`p-3 ${
+                    trade.profitLoss >= 0
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  ${trade.profitLoss}
+                </td>
+
+                <td className="p-3">
+                  <button
+                    onClick={() =>
+                      deleteTrade(trade._id)
+                    }
+                    className="bg-red-600 px-3 py-1 rounded hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
